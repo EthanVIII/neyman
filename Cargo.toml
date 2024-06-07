@@ -2,5 +2,15 @@
 name = "neyman"
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
+readme = "README.md"
+description = "A simple statistical programming language."
+
+[[bin]]
+name = "neyman"
+path = "src/cli.rs"
 
 [dependencies]
+clap = { version = "4.5.6", features = ["derive"] }
+log = "0.4.21"
+env_logger = "0.11.3"
