@@ -1,8 +1,15 @@
 //! # Parsing module
 //! This contains all functions and structs needed to parse source code into
 //! an Abstract Syntax Tree.
-use log::{debug, error};
+use log::{debug, error, info};
 
+pub trait Expression {
+    
+}
+
+pub trait Statement {
+    
+}
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct AstNode {
     val: String,
@@ -21,7 +28,7 @@ impl AstNode {
 /// then parsing the tokens to an AST.
 pub fn parse_to_ast(input: String) -> AstNode {
     let tokens: Vec<Token> = tokenise(input.chars().collect());
-    println!("{:?}", tokens);
+    info!("Successfully tokenised input");
     let x = AstNode::new_empty("test".parse().unwrap());
     return x;
 }
@@ -34,8 +41,7 @@ pub fn tokenise(input: Vec<char>) -> Vec<Token> {
         read_position: 1,
         position: 0};
     let mut tokens: Vec<Token> = vec![];
-    assert_eq!(!'\n'.is_ascii_alphanumeric(), true);
-    debug!("{:?}", lexer);
+    // Tokenise symbolic tokens, as well as identify IDs and Literals.
     while lexer.position < lexer.input.len() {
         if (lexer.input[lexer.position] == ' ') || (lexer.input[lexer.position] == '\r') {
             // If this is space then eat whitespace.
@@ -47,9 +53,33 @@ pub fn tokenise(input: Vec<char>) -> Vec<Token> {
             tokens.push(tok);
         }
     }
+    let mut index: usize = 0;
+    // Tokenise keywords from existing IDs.
+    while index < tokens.len() {
+        tokens[index] = pull_keywords(&tokens[index]);
+        index += 1;
+    }
     return tokens;
 }
 
+/// This pulls keywords from IDs.
+fn pull_keywords(token: &Token) -> Token {
+    return match token {
+        Token::ID(id_string)  => {
+            return match id_string.as_str() {
+                "if" => Token::IfToken,
+                "else" => Token::ElseToken,
+                "while" => Token::WhileToken,
+                "in" => Token::InToken,
+                "fn" => Token::FnToken,
+                "return" => Token::ReturnToken,
+                "let" => Token::LetToken,
+                other => Token::ID(other.parse().unwrap()),
+            }
+        }
+        other => other.clone(),
+    }
+}
 
 /// This Lexer struct is passed around to compute the tokens.
 #[derive(Debug, Clone, Eq, PartialEq)]
