@@ -402,7 +402,7 @@ fn next_token(lexer: &mut Lexer) -> Token {
         // Number literals start with numbers
         ch => {
             let tok: Token;
-            if ch.is_ascii_alphabetic() || ch == '_' {
+            if ch.is_ascii_alphabetic() {
                 let Some(index) = lexer.input[lexer.position..]
                     .iter()
                     .position(|&c| !(c.is_ascii_alphanumeric() || c == '_'))
@@ -424,10 +424,10 @@ fn next_token(lexer: &mut Lexer) -> Token {
                     .iter()
                     .position(|&c| !c.is_numeric())
                     else {
-                        error!("Could not find non-alphanumeric ending.");
+                        error!("Could not find non-numeric ending.");
                         panic!("No newline token at end of file for variable.");
                     };
-                tok = Token::ID(lexer.input[lexer.position..index + lexer.position]
+                tok = Token::Literal(lexer.input[lexer.position..index + lexer.position]
                     .iter()
                     .collect()
                 );
