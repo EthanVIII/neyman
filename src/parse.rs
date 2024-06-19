@@ -3,35 +3,50 @@
 //! an Abstract Syntax Tree.
 use log::{debug, error, info};
 
+/// Expressions return a value.
+/// Though, this distinction in code is likely largely for the code clarity.
 pub trait Expression {
-    
+    fn parse(&self) -> Token;
 }
 
+/// Statements do not return a value.
 pub trait Statement {
-    
+    fn parse(&self);
 }
+
+
+/// This is the recursive syntax tree structure.
+/// TODO: Change this to be a tree of Statements.
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub struct AstNode {
-    val: String,
-    children: Vec<AstNode>,
+pub struct Node {
+    token: Token,
+    children: Vec<Node>,
 }
-impl AstNode {
-    fn new_empty(val: String) -> AstNode {
-        return AstNode {
-            val,
+impl Node {
+    fn new() -> Node {
+        return Node {
+            token: Token::EOL,
             children: Vec::new(),
         }
     }
 }
 
-/// This parses the input to an abstract syntax tree by first tokenising it,
+/// This parses plaintext (source code) to an abstract syntax tree by first tokenising it,
 /// then parsing the tokens to an AST.
-pub fn parse_to_ast(input: String) -> AstNode {
+pub fn text_to_ast(input: String) -> Node {
     let tokens: Vec<Token> = tokenise(input.chars().collect());
     info!("Successfully tokenised input");
-    let x = AstNode::new_empty("test".parse().unwrap());
-    return x;
+    let program: Node = token_to_ast(tokens);
+    return program;
 }
+
+// TODO: Use Box<>?
+pub fn token_to_ast(tokens: Vec<Token>) -> Node {
+    let mut program: Node = Node::new();
+    return program;
+}
+
+
 
 /// This tokenises the whole input by constructing a lexer struct
 /// and passing it to `next_token()` for tokenising.
