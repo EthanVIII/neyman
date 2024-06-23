@@ -8,7 +8,7 @@ use std::io::Read;
 use std::path::{Display, Path};
 use clap::{arg, Parser};
 use log::{debug, error, info, warn};
-use crate::parse::{Node, text_to_ast};
+use crate::parse::{Statement, text_to_ast};
 
 /// The argument parser for the CLI.
 #[derive(Parser, Debug)]
@@ -49,7 +49,7 @@ fn cli() {
 
     // Read file.
     let file_txt: String = read_file(&args.filename);
-    let ast: Node = text_to_ast(file_txt);
+    let ast: Vec<Statement> = text_to_ast(file_txt);
     
 }
 

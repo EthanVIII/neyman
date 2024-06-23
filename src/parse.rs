@@ -1,51 +1,102 @@
 //! # Parsing module
 //! This contains all functions and structs needed to parse source code into
 //! an Abstract Syntax Tree.
+use std::ptr::read;
 use log::{debug, error, info};
 
 /// Expressions return a value.
-/// Though, this distinction in code is likely largely for the code clarity.
-pub trait Expression {
-    fn parse(&self) -> Token;
+pub enum Expression {
+    Value {
+        value:Token,
+    },
+    AdditionExp {
+        left: Box<Expression>,
+        right: Box<Expression>,
+    }
 }
-
-/// Statements do not return a value.
-pub trait Statement {
-    fn parse(&self);
-}
-
-
-/// This is the recursive syntax tree structure.
-/// TODO: Change this to be a tree of Statements.
-#[derive(Debug, Clone, Eq, PartialEq)]
-pub struct Node {
-    token: Token,
-    children: Vec<Node>,
-}
-impl Node {
-    fn new() -> Node {
-        return Node {
-            token: Token::EOL,
-            children: Vec::new(),
-        }
+pub enum Statement {
+    LetStatement {
+        left: Token,
+        right: Expression,
+    },
+    IfStatement {
+        condition: Expression,
+        true_path: Box<Statement>,
+    },
+    ReturnStatement { 
+        return_output: Expression,
+    },
+    BlockStatement {
+        statements: Vec<Box<Statement>>,
     }
 }
 
+
+
+
 /// This parses plaintext (source code) to an abstract syntax tree by first tokenising it,
 /// then parsing the tokens to an AST.
-pub fn text_to_ast(input: String) -> Node {
+pub fn text_to_ast(input: String) -> Vec<Statement> {
     let tokens: Vec<Token> = tokenise(input.chars().collect());
     info!("Successfully tokenised input");
-    let program: Node = token_to_ast(tokens);
+    let program: Vec<Statement> = token_to_ast(tokens);
     return program;
 }
 
-// TODO: Use Box<>?
-pub fn token_to_ast(tokens: Vec<Token>) -> Node {
-    let mut program: Node = Node::new();
+// TODO: CONTINUE HERE.
+pub fn token_to_ast(tokens: Vec<Token>) -> Vec<Statement> {
+    let mut program: Vec<Statement> = vec![];
+    let mut read: usize = 0;
+    while read < tokens.len() {
+        let node: Statement = parse_statement(&tokens, &read);
+        read += 1;
+    }
     return program;
 }
 
+pub fn parse_statement(tokens: &Vec<Token>, read_pos: &usize) -> Statement {
+    return match tokens[*read_pos] {
+        Token::LetToken => parse_let_statement(tokens, read_pos),
+        _ => todo!(),
+    }
+}
+pub fn parse_let_statement(tokens: &Vec<Token>, read_pos: &usize) -> Statement {
+    // Checks to make sure that syntax is valid.
+    // TODO: Implement types and type checking.
+    if let Some(Token::ID(_)) = peek_token(tokens, read_pos, 1) {
+        error!("Expected identifier for let assignment (e.g. let x = 3)");
+    }
+    if peek_token(tokens, read_pos, 2) != Some(Token::EqComparator) {
+        error!("Expected \"=\" for let assignment (e.g. let x = 3)");
+    }
+    let lhs: Token = tokens[*read_pos+1].clone();
+    let rhs: Expression = substring_to_outer_semicolon(&tokens[*read_pos+3..]);
+    return Statement::LetStatement { left: lhs, right: rhs};
+}
+
+// TODO: This needs to be extended to deal with nested blocks and inner semicolons.
+// Maybe convert to return the index of the semicolon.
+pub fn substring_to_outer_semicolon(tokens: &[Token]) -> Expression {
+    let index: usize = match tokens.iter().position(|m| m == &Token::Semicolon) {
+        Some(x) => x,
+        None => {
+            error!("Expected semicolon at end of line.");
+            panic!("Syntax error.");
+        }
+    };
+    return Expression::Value{value:tokens[index].clone()};
+}
+
+
+
+/// Peeks the next token in the list of tokens if possible.
+fn peek_token(tokens: &Vec<Token>, read_pos: &usize, step: usize) -> Option<Token> {
+    return if *read_pos + step >= tokens.len() {
+        Option::None
+    } else {
+        Option::Some(tokens[*read_pos + 1].clone())
+    }
+}
 
 
 /// This tokenises the whole input by constructing a lexer struct
@@ -450,6 +501,7 @@ fn next_token(lexer: &mut Lexer) -> Token {
                 lexer.read_position = lexer.position + 1;
                 return tok;
             }
+            // TODO: Implement centralised error handling.
             error!{"Invalid character \'{}\' detected.", ch};
             panic!{"Invalid Character set"};
         }
