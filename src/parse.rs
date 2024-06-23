@@ -32,8 +32,6 @@ pub enum Statement {
 }
 
 
-
-
 /// This parses plaintext (source code) to an abstract syntax tree by first tokenising it,
 /// then parsing the tokens to an AST.
 pub fn text_to_ast(input: String) -> Vec<Statement> {
